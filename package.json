@@ -1,0 +1,21 @@
+{
+  "name": "crafting-interpreters-ts",
+  "version": "1.0.0",
+  "description": "Crafting Interpreters follow-up with typescript",
+  "main": "src/index.ts",
+  "repository": "https://github.com/paulsohn/crafting-interpreters-ts.git",
+  "author": "Taeseung Sohn <paulsohn@outlook.kr>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dst/index.js",
+    "direct": "ts-node src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.17",
+    "@yarnpkg/sdks": "^3.0.0-rc.33",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4"
+  },
+  "packageManager": "yarn@3.3.0"
+}
