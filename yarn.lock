@@ -153,10 +153,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^18.11.17":
+"@types/node@npm:*":
   version: 18.11.17
   resolution: "@types/node@npm:18.11.17"
   checksum: c344af96ffdcc429d8d79576de72061553cd083d06cde8209a82b3d927c62ecf2211f24c3b970194636833f9dcfd94228f2b019f2d796f1f20dfc0d12e6dcc2b
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.18":
+  version: 18.11.18
+  resolution: "@types/node@npm:18.11.18"
+  checksum: bd39552701928d4a1613bc46adf8b65f8212064c2b5475a67161b6c4cef21ddb0a5c2ba062673213f8f5301ef6e171241a9e274a9b59c9fc1f5e2b69764740eb
   languageName: node
   linkType: hard
 
@@ -460,7 +467,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "crafting-interpreters-ts@workspace:."
   dependencies:
-    "@types/node": "npm:^18.11.17"
+    "@types/node": "npm:^18.11.18"
     "@yarnpkg/sdks": "npm:^3.0.0-rc.33"
     ts-node: "npm:^10.9.1"
     typescript: "npm:^4.9.4"

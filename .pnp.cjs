@@ -26,7 +26,7 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@types/node", "npm:18.11.17"],\
+          ["@types/node", "npm:18.11.18"],\
           ["@yarnpkg/sdks", "npm:3.0.0-rc.33"],\
           ["ts-node", "virtual:50ed6b7ff2737ad6b1d8144722c3ce96f43b56d30e1d7423364fcf7d9922813256b95e3a4e08d10af2805ae4e0c74e0ca417365e751f0bfb36e39228408a6143#npm:10.9.1"],\
           ["typescript", "patch:typescript@npm%3A4.9.4#optional!builtin<compat/typescript>::version=4.9.4&hash=ad5954"]\
@@ -215,6 +215,13 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../home/gitpod/.yarn/berry/cache/@types-node-npm-18.11.17-897ad73ae4-9.zip/node_modules/@types/node/",\
         "packageDependencies": [\
           ["@types/node", "npm:18.11.17"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:18.11.18", {\
+        "packageLocation": "../../home/gitpod/.yarn/berry/cache/@types-node-npm-18.11.18-d61e8a4a20-9.zip/node_modules/@types/node/",\
+        "packageDependencies": [\
+          ["@types/node", "npm:18.11.18"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -575,7 +582,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["crafting-interpreters-ts", "workspace:."],\
-          ["@types/node", "npm:18.11.17"],\
+          ["@types/node", "npm:18.11.18"],\
           ["@yarnpkg/sdks", "npm:3.0.0-rc.33"],\
           ["ts-node", "virtual:50ed6b7ff2737ad6b1d8144722c3ce96f43b56d30e1d7423364fcf7d9922813256b95e3a4e08d10af2805ae4e0c74e0ca417365e751f0bfb36e39228408a6143#npm:10.9.1"],\
           ["typescript", "patch:typescript@npm%3A4.9.4#optional!builtin<compat/typescript>::version=4.9.4&hash=ad5954"]\
@@ -1280,7 +1287,7 @@ const RAW_RUNTIME_STATE =
           ["@tsconfig/node12", "npm:1.0.11"],\
           ["@tsconfig/node14", "npm:1.0.3"],\
           ["@tsconfig/node16", "npm:1.0.3"],\
-          ["@types/node", "npm:18.11.17"],\
+          ["@types/node", "npm:18.11.18"],\
           ["@types/swc__core", null],\
           ["@types/swc__wasm", null],\
           ["@types/typescript", null],\
