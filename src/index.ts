@@ -26,11 +26,10 @@ function runFile(path: string){
     var data = fs.readFileSync(path, { encoding: 'utf8' });
     Lox.runLox(data);
 
-    if(Lox.hadError){
-        process.exit(65); // EX_DATAERR
-    } else{
-        process.exit(0);
-    }
+    if(Lox.hadError) process.exit(65); // EX_DATAERR
+    if(Lox.hadRuntimeError) process.exit(70); // EX_SOFTWARE
+
+    process.exit(0);
 }
 
 function runPrompt(){

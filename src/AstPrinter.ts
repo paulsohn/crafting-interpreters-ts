@@ -6,10 +6,10 @@ export class AstPrinter implements Expr.Visitor<string>{
         return expr.accept(this);
     }
 
-    parenthesize(name: string, ...exprs: Expr.Expr[]){
+    parenthesize(name: string, ...exprs: Expr.Expr[]): string{
         var result = `(${name}`;
         for(var expr of exprs){
-            result += ` ${ expr.accept(this) }`;
+            result += ` ${ this.print(expr) }`;
         }
         result += `)`;
         return result;
@@ -31,7 +31,7 @@ export class AstPrinter implements Expr.Visitor<string>{
 
     visitLiteralExpr(expr: Expr.Literal): string {
         if(expr.value === null) return 'nil';
-        return expr.value.toString();
+        return String(expr.value);
     }
 
     visitUnaryExpr(expr: Expr.Unary): string {
@@ -47,7 +47,7 @@ export class AstPrinterToRPN implements Expr.Visitor<string>{
         return expr.accept(this);
     }
 
-    asRPN(name: string, ...exprs: Expr.Expr[]){
+    asRPN(name: string, ...exprs: Expr.Expr[]): string{
         var result = ``;
         for(var expr of exprs){
             result += `${ expr.accept(this) } `;

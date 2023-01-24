@@ -1,12 +1,18 @@
 import { Token, TokenType } from './Token';
 import { Scanner } from './Scanner';
 import { Parser } from './Parser';
+import { Interpreter } from './Interpreter';
+
 import { AstPrinter } from './AstPrinter';
+import { RuntimeError } from './Error';
+
 
 // static class to implement interpreter and save its state.
 
 export class Lox{
+    private static interpreter: Interpreter = new Interpreter();
     static hadError: boolean = false;
+    static hadRuntimeError: boolean = false;
     /**
      * the core function.
      * 
@@ -30,6 +36,8 @@ export class Lox{
         console.log();
         console.log('Parsing result:');
         console.log( new AstPrinter().print(expression) );
+
+        this.interpreter.interpret(expression); // this will print output
     }
 
     static error(lineno: number, message: string): void;
@@ -56,4 +64,11 @@ export class Lox{
     static report(lineno: number, where: string, message: string){
         console.error(`[line ${lineno}] Error ${where}: ${message}`);
     }
+
+    static runtimeError(err: RuntimeError){
+        console.error(`[line ${ err.token.line }] RuntimeError: ${ err.message }`);
+
+        this.hadRuntimeError = true;
+    }
+    
 }

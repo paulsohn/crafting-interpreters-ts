@@ -163,7 +163,10 @@ export class Scanner{
         var text: string = this.source.substring(this.start, this.current)
         var type = this.keywords[text] ?? TokenType.IDENTIFIER
 
-        this.addToken(type);
+        if(type === TokenType.NIL) this.addToken(type, null);
+        else this.addToken(type, null);
+
+        // null and undefined are different in js, unfortunately.
     }
 
     private isAtEnd() : boolean {
