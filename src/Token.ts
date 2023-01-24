@@ -19,13 +19,15 @@ export enum TokenType {
     EOF
 };
 
+export type Primitive = string | number | boolean | null;
+
 export class Token{
     type: TokenType;
     lexeme: string;
-    literal: any;
+    literal: Primitive;
     line: number;
 
-    constructor(type: TokenType, lexeme: string, literal: any, line: number){
+    constructor(type: TokenType, lexeme: string, literal: Primitive, line: number){
         this.type = type;
         this.lexeme = lexeme;
         this.literal = literal;

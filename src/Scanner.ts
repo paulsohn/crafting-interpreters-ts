@@ -1,5 +1,5 @@
 import { Token, TokenType } from './Token';
-import { error } from './index';
+import { Lox } from './Lox';
 
 // Scanning (= Lexing) : regular grammar.
 
@@ -40,7 +40,7 @@ export class Scanner{
             this.scanToken();
         }
 
-        this.tokens.push(new Token(TokenType.EOF, '', undefined, this.line));
+        this.tokens.push(new Token(TokenType.EOF, '', null, this.line));
         return this.tokens;
     }
 
@@ -76,8 +76,8 @@ export class Scanner{
             // possible longer token
             case '/':
                 if(this.match('/')){
-                    // A comment goes until the end of the line.
-                    while(!this.peekMatch('\n')) this.advance();
+                    // A comment. Goes until the end of the line.
+                    while(!this.peekMatch('\n') && !this.isAtEnd()) this.advance();
 
                     // we used peekMatch() instead of match().
                     // We don't want newline to be consumed so we can update line no.
@@ -108,7 +108,7 @@ export class Scanner{
                 } else if(Scanner.isAlpha(c)){
                     this.identifier();
                 } else{
-                    error(this.line, "Unexpected character.");
+                    Lox.error(this.line, `Unexpected character ${c}.`);
                 }
                 break;
         }
@@ -121,7 +121,7 @@ export class Scanner{
         }
 
         if(this.isAtEnd()){
-            error(this.line, "Unterminated string.");
+            Lox.error(this.line, "Unterminated string.");
             return;
         }
 
