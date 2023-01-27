@@ -3,7 +3,7 @@ import { Scanner } from './Scanner';
 import { Parser } from './Parser';
 import { Interpreter } from './Interpreter';
 
-import { AstPrinter } from './AstPrinter';
+// import { AstPrinter } from './AstPrinter';
 import { RuntimeError } from './Error';
 
 
