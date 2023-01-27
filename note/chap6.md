@@ -28,3 +28,19 @@ one thing I would like to modify is to prevent nested `-`.
 ```
 unary   → "!" unary | "-"  primary | primary ;
 ```
+
+## Implementing recursive descent parsing
+
+for each entry, implement a function which consume that entry.
+
+```
+Expression(){ return Equality(); }
+Equality(){
+    result = Comparison();
+    while match in '!=' or '==' {
+        result = binaryNode( match, result, Comparison() );
+    }
+}
+...
+```
+and so on.

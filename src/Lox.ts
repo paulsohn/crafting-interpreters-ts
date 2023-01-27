@@ -22,22 +22,16 @@ export class Lox{
         var scanner = new Scanner(data);
         var tokens = scanner.scanTokens();
 
-        console.log('Scanning result:');
-        for(var token of tokens){
-            console.log(token);
-        }
+        // console.log('Scanning result:');
+        // for(var token of tokens){
+        //     console.log(token);
+        // }
 
         var parser = new Parser(tokens);
-        var expression = parser.parse();
+        var stmts = parser.parse();
 
         if(Lox.hadError) return;
-        if(expression === null) return;
-
-        console.log();
-        console.log('Parsing result:');
-        console.log( new AstPrinter().print(expression) );
-
-        this.interpreter.interpret(expression); // this will print output
+        this.interpreter.interpret(stmts);
     }
 
     static error(lineno: number, message: string): void;

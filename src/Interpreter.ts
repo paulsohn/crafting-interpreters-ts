@@ -1,23 +1,82 @@
 import { Lox } from './Lox';
 import * as Expr from './Expr';
-import { Token, TokenType } from './Token';
+import * as Stmt from './Stmt';
+import { Token, TokenType, Primitive } from './Token';
 
 import { RuntimeError } from './Error';
+import { Environment } from './Environment';
 
-export class Interpreter implements Expr.Visitor<any>{
-    interpret(expr: Expr.Expr){
+export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
+    private environment: Environment = new Environment(); // current environment
+
+    interpret(stmts: Stmt.Stmt[]){
         try {
-            var value = this.evaluate(expr);
-            console.log();
-            console.log('Interpreted result:')
-            console.log( stringify(value) );
+            for (var stmt of stmts){
+                this.execute(stmt);
+            }
         } catch (err){
             Lox.runtimeError(err as RuntimeError);
         }
     }
 
+    execute(stmt: Stmt.Stmt){
+        //we might want second param for env here also...?
+        stmt.accept(this);
+    }
+
+    executeBlock(stmts: Stmt.Stmt[], env: Environment){
+        // unlike single execute, we need an environment for this.
+        // env is the new environment generated outside the function.
+
+        var enclosing: Environment = this.environment;
+        // env.enclosing = enclosing;
+
+        try {
+            this.environment = env;
+
+            for(var stmt of stmts){
+                this.execute(stmt);
+            }
+
+        } finally {
+            this.environment = enclosing; // rip off the local env
+        }
+    }
+
     evaluate(expr: Expr.Expr): any{
         return expr.accept(this);
+    }
+
+    /* Stmt visitors */
+
+    visitBlockStmt(stmt: Stmt.Block){
+        return this.executeBlock(stmt.statements, new Environment(this.environment));
+    }
+
+    visitExpressionStmt(stmt: Stmt.Expression){
+        this.evaluate(stmt.expression);
+    }
+
+    visitPrintStmt(stmt: Stmt.Expression){
+        var value = this.evaluate(stmt.expression);
+        console.log(stringify(value));
+    }
+
+    visitVarStmt(stmt: Stmt.Var){
+        var value = null;
+        if(stmt.initializer !== null){
+            value = this.evaluate(stmt.initializer);
+        }
+
+        this.environment.define(stmt.name, value);
+    }
+
+    /* Expr visitors */
+
+    visitAssignExpr(expr: Expr.Assign) {
+        var value = this.evaluate(expr.value);
+        this.environment.define(expr.name, value);
+        return value;
     }
 
     visitBinaryExpr(expr: Expr.Binary){
@@ -90,6 +149,10 @@ export class Interpreter implements Expr.Visitor<any>{
 
         // unreachable
         return null;
+    }
+
+    visitVariableExpr(expr: Expr.Variable) {
+        return this.environment.get(expr.name);
     }
 };
 

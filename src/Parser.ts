@@ -1,5 +1,6 @@
 import { Token, TokenType } from './Token';
 import * as Expr from './Expr';
+import * as Stmt from './Stmt';
 import { Lox } from './Lox';
 
 class ParseError extends Error{}
@@ -12,19 +13,105 @@ export class Parser{
         this.tokens = tokens;
     }
 
-    parse(): Expr.Expr | null{
-        try {
-            return this.expression();
-        } catch(error){
-            return null;
+    parse(): Stmt.Stmt[]{ // program();
+        var statements: Stmt.Stmt[] = [];
+        while(!this.isAtEnd()){
+            try{
+                statements.push( this.declaration() );
+            } catch(err){
+                this.sync();
+            }
         }
+
+        return statements;
     }
 
     // terminal : code to match and consume a token
     // nonterminal : call to that rule's function
 
+    private declaration(): Stmt.Stmt {
+        if(this.matchType(TokenType.VAR)) return this.varDecl();
+        return this.statement();
+    }
+
+    private varDecl(): Stmt.Stmt {
+        this.advance();
+
+        var name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+        var initializer: Expr.Expr | null = null;
+        if(this.matchType(TokenType.EQUAL)){
+            this.advance();
+
+            initializer = this.expression();
+        }
+
+        this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private statement(): Stmt.Stmt{
+        if(this.matchType(TokenType.PRINT)) return this.printStmt();
+
+        if(this.matchType(TokenType.LEFT_BRACE)) return this.block();
+
+        return this.exprStmt();
+    }
+
+    private _bracedScope(): Stmt.Stmt[]{
+        var stmts: Stmt.Stmt[] = [];
+
+        this.advance();
+        while(!this.matchType(TokenType.RIGHT_BRACE)){
+            var stmt = this.declaration();
+            stmts.push(stmt);
+        }
+        this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+
+        return stmts;
+    }
+
+    private block(): Stmt.Stmt{
+        var stmts = this._bracedScope();
+
+        return new Stmt.Block(stmts);
+    }
+
+    private exprStmt(): Stmt.Expression {
+        var expr = this.expression();
+        this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
+
+    private printStmt(): Stmt.Print {
+        this.advance();
+
+        var expr = this.expression();
+        this.consume(TokenType.SEMICOLON, "Expect ';' after print statement.");
+        return new Stmt.Print(expr);
+    }
+
     private expression(): Expr.Expr{
-        return this.equality();
+        return this.assignment();
+    }
+
+    private assignment(): Expr.Expr{
+        var expr: Expr.Expr = this.equality(); // first parse left hand side (currently only IDENTIFIER)
+
+        if(this.matchType(TokenType.EQUAL)){
+            var equals = this.advance();
+            var value = this.assignment();
+
+            // is L-value??
+            if(expr instanceof Expr.Variable){
+                var name = expr.name;
+                return new Expr.Assign(name, value);
+            }
+
+            this.error(equals, 'Invalid assignment target.');
+        }
+
+        return expr; // turns out that '=' is missing: possible LHS is 
     }
 
     private equality(): Expr.Expr{
@@ -114,6 +201,11 @@ export class Parser{
             return new Expr.Literal(token.literal);
         }
 
+        if(this.matchType(TokenType.IDENTIFIER)){
+            var name = this.advance();
+            return new Expr.Variable(name);
+        }
+
         if(this.matchType(TokenType.LEFT_PAREN)){
             this.advance();
             var expr: Expr.Expr = this.expression();
@@ -134,7 +226,7 @@ export class Parser{
         return false;
     }
 
-    private consume(type: TokenType, errorMessage: string): Token {
+    private consume(type: TokenType, errorMessage: string = "UNREACHABLE"): Token {
         if(this.matchType(type)) return this.advance();
 
         throw this.error(this.peek(), errorMessage);

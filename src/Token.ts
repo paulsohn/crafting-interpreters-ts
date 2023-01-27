@@ -1,3 +1,5 @@
+export type Primitive = string | number | boolean | null;
+
 export enum TokenType {
     // Single-character tokens.
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
@@ -18,8 +20,6 @@ export enum TokenType {
 
     EOF
 };
-
-export type Primitive = string | number | boolean | null;
 
 export class Token{
     type: TokenType;
