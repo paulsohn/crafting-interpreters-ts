@@ -56,8 +56,9 @@ function main(){
         'Expression': [ 'expression: Expr' ],
         'Var': [ 'name: Token', 'initializer: Expr | null' ],
         'If': [ 'condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt | null' ],
-        'While': [ 'condition: Expr', 'body: Stmt' ],
+        'While': [ 'condition: Expr', 'body: Stmt', 'increment: Expr | null' ],
         'Print': [ 'expression: Expr' ],
+        'Control': [ 'keyword: Token', 'value: Expr | null' ],
     });
 }
 

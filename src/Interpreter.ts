@@ -6,6 +6,16 @@ import { Token, TokenType, Primitive } from './Token';
 import { RuntimeError } from './Error';
 import { Environment } from './Environment';
 
+class Control{
+    keyword: TokenType;
+    value: any; // for return : return value. for break/continue : label if possible.
+
+    constructor(keyword: TokenType, value?: any){
+        this.keyword = keyword;
+        this.value = value;
+    }
+}
+
 export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     private environment: Environment = new Environment(); // current environment
 
@@ -72,7 +82,28 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
 
     visitWhileStmt(stmt: Stmt.While){
         while(isTruthy(this.evaluate(stmt.condition))){
-            this.execute(stmt.body);
+            var ct = false;
+            // var brk = false;
+            try{
+                this.execute(stmt.body);
+            } catch(ctrl){
+                if(ctrl instanceof Control){
+                    if(ctrl.keyword === TokenType.CONTINUE){
+                        ct = true;
+                        // continue -- do nothing.
+                    }
+                    if(ctrl.keyword === TokenType.BREAK){
+                        // brk = true;
+                        break;
+                    }
+                }
+            }
+            // if(ct) continue;
+            // if(brk) break;
+
+            if(stmt.increment !== null){
+                this.evaluate(stmt.increment);
+            }
         }
         return null;
     }
@@ -84,6 +115,10 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     visitPrintStmt(stmt: Stmt.Expression){
         var value = this.evaluate(stmt.expression);
         console.log(stringify(value));
+    }
+
+    visitControlStmt(stmt: Stmt.Control): void {
+        throw new Control(stmt.keyword.type, stmt.value);
     }
 
     /* Expr visitors */

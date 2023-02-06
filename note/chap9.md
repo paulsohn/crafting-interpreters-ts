@@ -1,6 +1,6 @@
 # Chap 9. Control Flow
 
-## extending the EBNF rule
+## EBNF rule
 
 ```
 program        → declaration* EOF ; // ensure that a program consume whole statements
@@ -15,15 +15,17 @@ statement      → exprStmt
                 | printStmt
                 | ifStmt
                 | whileStmt
-                | forStmt // sugar!
-                | block;
+                | forStmt // sugar
+                | ctrlStmt
+                | block ;
 
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
 
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )?;
-whileStmt      → "while" "(" expression ")" statement ; // no loop break / continue defined here... @TODO
+whileStmt      → "while" "(" expression ")" statement ;
 forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+ctrlStmt       → ("continue" | "break" | "return" expression? ) ";" ;
 
 block          → "{" declaration* "}" ;
 
@@ -47,6 +49,7 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
 
 ```
 defineAst(outputDir, 'Expr', [], {
+    'Assign' : [ 'name: Token', 'value: Expr' ],
     'Binary' : [ 'left: Expr', 'operator: Token', 'right: Expr'  ],
     'Grouping': [ 'expression: Expr' ],
     'Literal' : [ 'value: Primitive' ],
@@ -57,8 +60,11 @@ defineAst(outputDir, 'Expr', [], {
 defineAst(outputDir, 'Stmt', ['Expr'], {
     'Block': [ 'statements: Stmt[]' ],
     'Expression': [ 'expression: Expr' ],
-    'Print': [ 'expression: Expr' ],
     'Var': [ 'name: Token', 'initializer: Expr | null' ],
+    'If': [ 'condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt | null' ],
+    'While': [ 'condition: Expr', 'body: Stmt' ],
+    'Print': [ 'expression: Expr' ],
+    'Control': [ 'keyword: Token', 'value: Expr | null' ],
 });
 ```
 

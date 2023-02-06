@@ -68,11 +68,13 @@ export class If extends Stmt {
 export class While extends Stmt {
     condition: Expr;
     body: Stmt;
+    increment: Expr | null;
 
-    constructor(condition: Expr, body: Stmt){
+    constructor(condition: Expr, body: Stmt, increment: Expr | null){
         super();
         this.condition = condition;
         this.body = body;
+        this.increment = increment;
     }
 
     override accept<R>(visitor: Visitor<R>): R {
@@ -93,6 +95,21 @@ export class Print extends Stmt {
     }
 }
 
+export class Control extends Stmt {
+    keyword: Token;
+    value: Expr | null;
+
+    constructor(keyword: Token, value: Expr | null){
+        super();
+        this.keyword = keyword;
+        this.value = value;
+    }
+
+    override accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitControlStmt(this);
+    }
+}
+
 export interface Visitor<R> {
     visitBlockStmt(stmt: Block): R;
     visitExpressionStmt(stmt: Expression): R;
@@ -100,5 +117,6 @@ export interface Visitor<R> {
     visitIfStmt(stmt: If): R;
     visitWhileStmt(stmt: While): R;
     visitPrintStmt(stmt: Print): R;
+    visitControlStmt(stmt: Control): R;
 }
 

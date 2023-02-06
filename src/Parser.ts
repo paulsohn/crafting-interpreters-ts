@@ -9,6 +9,8 @@ export class Parser{
     private tokens: Token[] = [];
     private current: number = 0;
 
+    private loopDepth: number = 0;
+
     constructor(tokens: Token[]){
         this.tokens = tokens;
     }
@@ -55,6 +57,11 @@ export class Parser{
         if(this.matchType(TokenType.IF)) return this.ifStmt();
         if(this.matchType(TokenType.WHILE)) return this.whileStmt();
         if(this.matchType(TokenType.FOR)) return this.forStmt();
+        if(this.matchType(
+            TokenType.RETURN,
+            TokenType.CONTINUE,
+            TokenType.BREAK
+        )) return this.ctrlStmt();
         if(this.matchType(TokenType.LEFT_BRACE)) return this.block();
 
         return this.exprStmt();
@@ -101,25 +108,26 @@ export class Parser{
         var cond = this.expression();
         this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
 
+        this.loopDepth += 1;
         var body = this.statement();
+        this.loopDepth -= 1;
 
-        return new Stmt.While(cond, body);
+        return new Stmt.While(cond, body, null);
     }
 
     private forStmt(): Stmt.Stmt{ // treat as syntax sugar
+
         this.advance();
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
 
-        var initializer;
+        var initializer: Stmt.Stmt | null = null;
         if(this.matchType(TokenType.SEMICOLON)){
             this.advance();
-            initializer = null;
         } else if(this.matchType(TokenType.VAR)){
             initializer = this.varDecl();
         } else{
             initializer = this.exprStmt();
         } // consume up to first ';'
-
 
         var condition: Expr.Expr = new Expr.Literal(true); // default loop condition
         if(!this.matchType(TokenType.SEMICOLON)){
@@ -128,24 +136,42 @@ export class Parser{
         this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
 
 
-        var increment = null;
+        var increment : Expr.Expr | null = null;
         if(!this.matchType(TokenType.RIGHT_PAREN)){
             increment = this.expression();
         }
         this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
 
+        this.loopDepth += 1;
         var body = this.statement();
+        this.loopDepth -= 1;
 
         // desugaring!
-        if(increment !== null){
-            body = new Stmt.Block([ body, new Stmt.Expression(increment) ]);
-        }
-        body = new Stmt.While(condition, body);
+        body = new Stmt.While(condition, body, increment);
         if(initializer !== null){
             body = new Stmt.Block([ initializer, body ]);
         }
 
         return body;
+    }
+
+    private ctrlStmt(): Stmt.Control {
+        var token = this.advance();
+        // check for misc syntax errors.
+        if(this.loopDepth === 0 && (
+            token.type === TokenType.BREAK || token.type === TokenType.CONTINUE
+        )){
+            this.error(token, "'break' and 'continue' can be used only inside loops.");
+        }
+
+        var expr: Expr.Expr | null = null;
+        if(token.type === TokenType.RETURN && !this.matchType(TokenType.SEMICOLON)){
+            expr = this.expression();
+        }
+
+        this.consume(TokenType.SEMICOLON, "Expect ';' after control syntax.");
+
+        return new Stmt.Control(token, expr);
     }
 
     private exprStmt(): Stmt.Expression {
