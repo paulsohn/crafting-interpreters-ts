@@ -50,16 +50,7 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     /* Stmt visitors */
 
     visitBlockStmt(stmt: Stmt.Block){
-        return this.executeBlock(stmt.statements, new Environment(this.environment));
-    }
-
-    visitExpressionStmt(stmt: Stmt.Expression){
-        this.evaluate(stmt.expression);
-    }
-
-    visitPrintStmt(stmt: Stmt.Expression){
-        var value = this.evaluate(stmt.expression);
-        console.log(stringify(value));
+        this.executeBlock(stmt.statements, new Environment(this.environment));
     }
 
     visitVarStmt(stmt: Stmt.Var){
@@ -71,20 +62,51 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
         this.environment.define(stmt.name, value);
     }
 
+    visitIfStmt(stmt: Stmt.If){
+        if(isTruthy(this.evaluate(stmt.condition))){
+            this.execute(stmt.thenBranch);
+        } else if(stmt.elseBranch !== null){
+            this.execute(stmt.elseBranch);
+        }
+    }
+
+    visitWhileStmt(stmt: Stmt.While){
+        while(isTruthy(this.evaluate(stmt.condition))){
+            this.execute(stmt.body);
+        }
+        return null;
+    }
+
+    visitExpressionStmt(stmt: Stmt.Expression){
+        this.evaluate(stmt.expression);
+    }
+
+    visitPrintStmt(stmt: Stmt.Expression){
+        var value = this.evaluate(stmt.expression);
+        console.log(stringify(value));
+    }
+
     /* Expr visitors */
 
     visitAssignExpr(expr: Expr.Assign) {
         var value = this.evaluate(expr.value);
-        this.environment.define(expr.name, value);
+        this.environment.assign(expr.name, value);
         return value;
     }
 
     visitBinaryExpr(expr: Expr.Binary){
-        // no short-circuit evaluation here.
+        // short-circuit evaluation goes first.
         var left = this.evaluate(expr.left);
+        if(expr.operator.type === TokenType.AND && !isTruthy(left)) return left; // return false;
+        else if(expr.operator.type === TokenType.OR && isTruthy(left)) return left; // return true;
+
         var right = this.evaluate(expr.right);
 
         switch(expr.operator.type){
+        case TokenType.AND:
+        case TokenType.OR:
+            // return isTruthy(right);
+            return right;
         case TokenType.GREATER:
             checkNumberOperand(expr.operator, left);
             checkNumberOperand(expr.operator, right);
@@ -118,6 +140,7 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
             checkNumberOperand(expr.operator, right);
             return left * right;
         case TokenType.PLUS: // overloaded
+            // console.log(left, right);
             if(typeof left  === 'number' && typeof right === 'number'){
                 return left + right; // addition
             }

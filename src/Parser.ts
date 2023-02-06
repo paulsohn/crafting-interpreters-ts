@@ -52,6 +52,9 @@ export class Parser{
 
     private statement(): Stmt.Stmt{
         if(this.matchType(TokenType.PRINT)) return this.printStmt();
+        if(this.matchType(TokenType.IF)) return this.ifStmt();
+        if(this.matchType(TokenType.WHILE)) return this.whileStmt();
+        if(this.matchType(TokenType.FOR)) return this.forStmt();
         if(this.matchType(TokenType.LEFT_BRACE)) return this.block();
 
         return this.exprStmt();
@@ -76,6 +79,75 @@ export class Parser{
         return new Stmt.Block(stmts);
     }
 
+    private ifStmt(): Stmt.Stmt{
+        this.advance();
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+        var cond = this.expression();
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+        var thenBranch = this.statement();
+        var elseBranch = null;
+        if(this.matchType(TokenType.ELSE)){
+            this.advance();
+            elseBranch = this.statement();
+        }
+
+        return new Stmt.If(cond, thenBranch, elseBranch);
+    }
+
+    private whileStmt(): Stmt.Stmt{
+        this.advance();
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+        var cond = this.expression();
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+        var body = this.statement();
+
+        return new Stmt.While(cond, body);
+    }
+
+    private forStmt(): Stmt.Stmt{ // treat as syntax sugar
+        this.advance();
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+        var initializer;
+        if(this.matchType(TokenType.SEMICOLON)){
+            this.advance();
+            initializer = null;
+        } else if(this.matchType(TokenType.VAR)){
+            initializer = this.varDecl();
+        } else{
+            initializer = this.exprStmt();
+        } // consume up to first ';'
+
+
+        var condition: Expr.Expr = new Expr.Literal(true); // default loop condition
+        if(!this.matchType(TokenType.SEMICOLON)){
+            condition = this.expression();
+        }
+        this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+
+        var increment = null;
+        if(!this.matchType(TokenType.RIGHT_PAREN)){
+            increment = this.expression();
+        }
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        var body = this.statement();
+
+        // desugaring!
+        if(increment !== null){
+            body = new Stmt.Block([ body, new Stmt.Expression(increment) ]);
+        }
+        body = new Stmt.While(condition, body);
+        if(initializer !== null){
+            body = new Stmt.Block([ initializer, body ]);
+        }
+
+        return body;
+    }
+
     private exprStmt(): Stmt.Expression {
         var expr = this.expression();
         this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
@@ -95,7 +167,7 @@ export class Parser{
     }
 
     private assignment(): Expr.Expr{
-        var expr: Expr.Expr = this.equality(); // first parse left hand side (currently only IDENTIFIER)
+        var expr: Expr.Expr = this.logicOr(); // first parse LHS (currently only IDENTIFIER)
 
         if(this.matchType(TokenType.EQUAL)){
             var equals = this.advance();
@@ -111,6 +183,36 @@ export class Parser{
         }
 
         return expr; // turns out that '=' is missing: possible LHS is 
+    }
+
+    private logicOr(): Expr.Expr{
+        // logic_or → logic_and ( "or" logic_and )* ;
+
+        var expr: Expr.Expr = this.logicAnd();
+
+        while(this.matchType(TokenType.OR)){
+            var operator: Token = this.advance();
+            var right: Expr.Expr = this.logicAnd();
+
+            expr = new Expr.Binary(expr, operator, right);
+        }
+
+        return expr;
+    }
+
+    private logicAnd(): Expr.Expr{
+        // logic_and → equality ( "and" equality )* ;
+
+        var expr: Expr.Expr = this.equality();
+
+        while(this.matchType(TokenType.AND)){
+            var operator: Token = this.advance();
+            var right: Expr.Expr = this.equality();
+
+            expr = new Expr.Binary(expr, operator, right);
+        }
+
+        return expr;
     }
 
     private equality(): Expr.Expr{
@@ -192,7 +294,7 @@ export class Parser{
     }
 
     private primary(): Expr.Expr{
-        // primary → NUMBER | STRING | "true" | "false" | "nil"
+        // primary → NUMBER | IDENTIFIER | STRING | "true" | "false" | "nil"
         //          | "(" expression ")" ;
 
         if(this.matchType(TokenType.NUMBER, TokenType.STRING, TokenType.TRUE, TokenType.FALSE, TokenType.NIL)){

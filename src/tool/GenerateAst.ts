@@ -54,8 +54,10 @@ function main(){
     defineAst(outputDir, 'Stmt', ['Expr'], {
         'Block': [ 'statements: Stmt[]' ],
         'Expression': [ 'expression: Expr' ],
-        'Print': [ 'expression: Expr' ],
         'Var': [ 'name: Token', 'initializer: Expr | null' ],
+        'If': [ 'condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt | null' ],
+        'While': [ 'condition: Expr', 'body: Stmt' ],
+        'Print': [ 'expression: Expr' ],
     });
 }
 
