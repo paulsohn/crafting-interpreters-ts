@@ -36,7 +36,13 @@ export class Environment {
 
     assign(name: Token, value: any){ // why Token, not string??
         if(this.values.has(name.lexeme)){
-            return this.values.get(name.lexeme);
+            this.values.set(name.lexeme, value);
+            return;
+        }
+
+        if(this.enclosing !== undefined){
+            this.enclosing.assign(name, value);
+            return;
         }
 
         throw new RuntimeError(name, `Undeclared variable '${ name.lexeme }'`);

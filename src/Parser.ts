@@ -52,7 +52,6 @@ export class Parser{
 
     private statement(): Stmt.Stmt{
         if(this.matchType(TokenType.PRINT)) return this.printStmt();
-
         if(this.matchType(TokenType.LEFT_BRACE)) return this.block();
 
         return this.exprStmt();
