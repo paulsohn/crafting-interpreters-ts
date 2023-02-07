@@ -1,0 +1,52 @@
+// here is a good example of closure
+
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".
+
+
+
+// now here is a questionable example of closure
+// `i` can be accessed in the local function, although 
+// this is TOTALLY FINE in some languages, but it's wierd
+// so we will do some semantic analysis before run.
+
+fun makeCounter2() {
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+  var i = 4;
+
+  return count;
+}
+
+var counter2 = makeCounter2();
+counter2(); // "5".
+counter2(); // "6".
+
+
+
+// here's a more patheologic example
+
+var a = "global";
+{
+  fun showA() {
+    print a;
+  }
+
+  showA(); // in instruction-level parallelism, it might cause a race between invoking `showA` and declaring new local `a`. (?)
+  var a = "block";
+  showA();
+}
+// showA();

@@ -17,15 +17,17 @@ export abstract class Callable {
 
 export class Function extends Callable {
     private declaration: Stmt.Function;
+    private closure: Environment;
 
-    constructor(declaration: Stmt.Function){
+    constructor(declaration: Stmt.Function, closure: Environment){
         super();
         this.arity = declaration.params.length;
         this.declaration = declaration;
+        this.closure = closure;
     }
 
     call(interpreter: Interpreter, args: any[]) {
-        var environment = new Environment(interpreter.globals);
+        var environment = new Environment(this.closure);
         // the environment must be created dynamically.
         // 'top-level' functions only for now.
 

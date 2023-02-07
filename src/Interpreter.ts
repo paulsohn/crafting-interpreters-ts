@@ -126,7 +126,7 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     }
 
     visitFunctionStmt(stmt: Stmt.Function){
-        var func: Function = new Function(stmt);
+        var func: Function = new Function(stmt, this.environment);
         this.environment.define(stmt.name.lexeme, func);
     }
 
