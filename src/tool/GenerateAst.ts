@@ -45,6 +45,7 @@ function main(){
     defineAst(outputDir, 'Expr', [], {
         'Assign' : [ 'name: Token', 'value: Expr' ],
         'Binary' : [ 'left: Expr', 'operator: Token', 'right: Expr'  ],
+        'Call' : [ 'callee: Expr', 'paren: Token', 'args: Expr[]' ],
         'Grouping': [ 'expression: Expr' ],
         'Literal' : [ 'value: Primitive' ],
         'Unary' : [ 'operator: Token', 'right: Expr' ],
@@ -54,6 +55,7 @@ function main(){
     defineAst(outputDir, 'Stmt', ['Expr'], {
         'Block': [ 'statements: Stmt[]' ],
         'Expression': [ 'expression: Expr' ],
+        'Function': [ 'name: Token', 'params: Token[]', 'body: Stmt[]' ],
         'Var': [ 'name: Token', 'initializer: Expr | null' ],
         'If': [ 'condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt | null' ],
         'While': [ 'condition: Expr', 'body: Stmt', 'increment: Expr | null' ],

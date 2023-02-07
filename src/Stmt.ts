@@ -33,6 +33,23 @@ export class Expression extends Stmt {
     }
 }
 
+export class Function extends Stmt {
+    name: Token;
+    params: Token[];
+    body: Stmt[];
+
+    constructor(name: Token, params: Token[], body: Stmt[]){
+        super();
+        this.name = name;
+        this.params = params;
+        this.body = body;
+    }
+
+    override accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitFunctionStmt(this);
+    }
+}
+
 export class Var extends Stmt {
     name: Token;
     initializer: Expr | null;
@@ -113,6 +130,7 @@ export class Control extends Stmt {
 export interface Visitor<R> {
     visitBlockStmt(stmt: Block): R;
     visitExpressionStmt(stmt: Expression): R;
+    visitFunctionStmt(stmt: Function): R;
     visitVarStmt(stmt: Var): R;
     visitIfStmt(stmt: If): R;
     visitWhileStmt(stmt: While): R;

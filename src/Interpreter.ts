@@ -6,18 +6,30 @@ import { Token, TokenType, Primitive } from './Token';
 import { RuntimeError } from './Error';
 import { Environment } from './Environment';
 
-class Control{
-    keyword: TokenType;
-    value: any; // for return : return value. for break/continue : label if possible.
+import { Callable, Function } from './Callable';
 
-    constructor(keyword: TokenType, value?: any){
-        this.keyword = keyword;
-        this.value = value;
-    }
-}
+import { Control } from './Control';
 
 export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
-    private environment: Environment = new Environment(); // current environment
+    globals: Environment = new Environment();
+    private environment: Environment = this.globals; // current environment
+
+    constructor(){
+        this.globals.define('clock', new (class ClockFn extends Callable {
+            arity = 0;
+            call(interpreter: Interpreter, args: any[]) {
+                return Date.now() / 1000.0;
+            }
+            toString(){ return '<native fn \'clock\'>'; }
+        })());
+        this.globals.define('string', new (class StringFn extends Callable {
+            arity = 1;
+            call(interpreter: Interpreter, args: any[]) {
+                return String(args[0]);
+            }
+            toString(){ return '<native fn \'string\'>'; }
+        })());
+    }
 
     interpret(stmts: Stmt.Stmt[]){
         try {
@@ -92,11 +104,12 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
                         ct = true;
                         // continue -- do nothing.
                     }
-                    if(ctrl.keyword === TokenType.BREAK){
+                    else if(ctrl.keyword === TokenType.BREAK){
                         // brk = true;
                         break;
-                    }
+                    } else throw ctrl;
                 }
+                else throw ctrl;
             }
             // if(ct) continue;
             // if(brk) break;
@@ -112,13 +125,23 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
         this.evaluate(stmt.expression);
     }
 
+    visitFunctionStmt(stmt: Stmt.Function){
+        var func: Function = new Function(stmt);
+        this.environment.define(stmt.name.lexeme, func);
+    }
+
     visitPrintStmt(stmt: Stmt.Expression){
         var value = this.evaluate(stmt.expression);
         console.log(stringify(value));
     }
 
     visitControlStmt(stmt: Stmt.Control): void {
-        throw new Control(stmt.keyword.type, stmt.value);
+        var value = stmt.value;
+        if( stmt.keyword.type === TokenType.RETURN && value !== null ){
+            value = this.evaluate(value);
+        }
+
+        throw new Control(stmt.keyword.type, value);
     }
 
     /* Expr visitors */
@@ -130,7 +153,7 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     }
 
     visitBinaryExpr(expr: Expr.Binary){
-        // short-circuit evaluation goes first.
+        // short-circuit evaluation comes first.
         var left = this.evaluate(expr.left);
         if(expr.operator.type === TokenType.AND && !isTruthy(left)) return left; // return false;
         else if(expr.operator.type === TokenType.OR && isTruthy(left)) return left; // return true;
@@ -188,6 +211,27 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
         // unreachable
         return null;
     };
+
+    visitCallExpr(expr: Expr.Call) {
+        var callee = this.evaluate(expr.callee);
+        if(!(callee instanceof Callable)){
+            throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+        }
+        if(expr.args.length !== callee.arity /* arity comparison */ ){
+            throw new RuntimeError(expr.paren, `Expected ${ callee.arity } arguments but got ${ expr.args.length }.`);
+        }
+
+        var args : any[] = [];
+        for(var argexp of expr.args){
+            args.push(this.evaluate(argexp));
+        }
+
+        return callee.call(this, args);
+
+        // inside call function,
+        // * lox function will internally throw error and catch it, and return it as a value
+        // * native function will directly return result.
+    }
 
     visitGroupingExpr(expr: Expr.Grouping){
         return this.evaluate(expr.expression);

@@ -7,8 +7,13 @@ program        → declaration* EOF ; // ensure that a program consume whole sta
 
 program        → declaration* EOF ;
 
-declaration    → varDecl
+declaration    → funDecl
+               | varDecl
                | statement ;
+
+funDecl        → "fun" function ;
+function       → IDENTIFIER "(" parameters? ")" block ;
+parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 statement      → exprStmt 
@@ -39,7 +44,10 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
-               | primary ;
+               | call ;
+call           → primary ( "(" arguments? ")" )* ;
+arguments      → expression ( "," expression )* ;
+
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")"
                | IDENTIFIER ;
@@ -51,6 +59,7 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
 defineAst(outputDir, 'Expr', [], {
     'Assign' : [ 'name: Token', 'value: Expr' ],
     'Binary' : [ 'left: Expr', 'operator: Token', 'right: Expr'  ],
+    'Call' : [ 'callee: Expr', 'paren: Token', 'arguments: Expr[]' ],
     'Grouping': [ 'expression: Expr' ],
     'Literal' : [ 'value: Primitive' ],
     'Unary' : [ 'operator: Token', 'right: Expr' ],
@@ -60,6 +69,7 @@ defineAst(outputDir, 'Expr', [], {
 defineAst(outputDir, 'Stmt', ['Expr'], {
     'Block': [ 'statements: Stmt[]' ],
     'Expression': [ 'expression: Expr' ],
+    'Function': [ 'name: Token', 'params: Token[]', 'body: Stmt[]' ], // body as array (for simplicity, not Expr.Block)
     'Var': [ 'name: Token', 'initializer: Expr | null' ],
     'If': [ 'condition: Expr', 'thenBranch: Stmt', 'elseBranch: Stmt | null' ],
     'While': [ 'condition: Expr', 'body: Stmt' ],
@@ -71,3 +81,6 @@ defineAst(outputDir, 'Stmt', ['Expr'], {
 ## Things we have done so far
 
 * TODO
+
+up to 10.5.
+next: 10.6

@@ -32,6 +32,11 @@ export class Parser{
     // nonterminal : call to that rule's function
 
     private declaration(): Stmt.Stmt {
+        if(this.matchType(TokenType.FUN)){
+            // too lazy to have this.funDecl();
+            this.advance();
+            return this.func('function');
+        }
         if(this.matchType(TokenType.VAR)) return this.varDecl();
         return this.statement();
     }
@@ -70,7 +75,8 @@ export class Parser{
     private _bracedScope(): Stmt.Stmt[]{
         var stmts: Stmt.Stmt[] = [];
 
-        this.advance();
+        // this.advance();
+        this.consume(TokenType.LEFT_BRACE);
         while(!this.matchType(TokenType.RIGHT_BRACE)){
             var stmt = this.declaration();
             stmts.push(stmt);
@@ -178,6 +184,35 @@ export class Parser{
         var expr = this.expression();
         this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
+    }
+
+    private func(kind: string): Stmt.Function {
+        var name = this.consume(TokenType.IDENTIFIER, `Expect ${ kind } name.`); // well, this won't allow anonymous function...
+        this.consume(TokenType.LEFT_PAREN, `Expect '(' after ${ kind } name.`);
+
+        var params: Token[] = [];
+        if(!this.matchType(TokenType.RIGHT_PAREN)){
+            while(true){
+                if(params.length >= 255){
+                    this.error(this.peek(), "Can't have more than 255 parameters.");
+                }
+
+                params.push(
+                    this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                );
+
+                if(this.matchType(TokenType.COMMA)){
+                    this.advance();
+                } else break;
+            }
+        }
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+        if(!this.matchType(TokenType.LEFT_BRACE)){
+            throw this.error(this.peek(), `Expect '{' before ${kind} body.`);
+        }
+        var body = this._bracedScope();
+        return new Stmt.Function(name, params, body);
     }
 
     private printStmt(): Stmt.Print {
@@ -316,7 +351,44 @@ export class Parser{
             return new Expr.Unary(operator, right);
         }
 
-        return this.primary();
+        return this.call();
+    }
+
+    private _finishCall(callee: Expr.Expr): Expr.Expr {
+        this.consume(TokenType.LEFT_PAREN);
+
+        var args: Expr.Expr[] = [];
+        if(!this.matchType(TokenType.RIGHT_PAREN)){
+            while(true){
+                if(args.length >= 255){
+                    // quite extreme edge case
+                    // it should match with our bytecode interpreter
+                    this.error(this.peek(), "Can't have more than 255 arguments.");
+                }
+                args.push( this.expression() );
+                if(this.matchType(TokenType.COMMA)){
+                    this.advance();
+                } else break;
+            }
+        }
+
+        var paren = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+        return new Expr.Call(callee, paren, args);
+    }
+
+    private call(): Expr.Expr{
+        var expr = this.primary();
+        
+        while(true){
+            if(this.matchType(TokenType.LEFT_PAREN)){
+                expr = this._finishCall(expr);
+            } else{
+                break;
+            }
+        }
+
+        return expr;
     }
 
     private primary(): Expr.Expr{

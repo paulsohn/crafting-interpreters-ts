@@ -28,13 +28,16 @@ export class Environment {
         // alternatively, we could throw runtime error.
     }
 
-    define(name: Token, value: any){
-        this.values.set(name.lexeme, value);
+    define(name: Token | string, value: any){
+        if(name instanceof Token){
+            name = name.lexeme;
+        }
+        this.values.set(name, value);
 
         // We won't prevent redefining. It just silently shadows the variable.
     }
 
-    assign(name: Token, value: any){ // why Token, not string??
+    assign(name: Token, value: any){
         if(this.values.has(name.lexeme)){
             this.values.set(name.lexeme, value);
             return;

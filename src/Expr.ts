@@ -38,6 +38,23 @@ export class Binary extends Expr {
     }
 }
 
+export class Call extends Expr {
+    callee: Expr;
+    paren: Token;
+    args: Expr[];
+
+    constructor(callee: Expr, paren: Token, args: Expr[]){
+        super();
+        this.callee = callee;
+        this.paren = paren;
+        this.args = args;
+    }
+
+    override accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitCallExpr(this);
+    }
+}
+
 export class Grouping extends Expr {
     expression: Expr;
 
@@ -95,6 +112,7 @@ export class Variable extends Expr {
 export interface Visitor<R> {
     visitAssignExpr(expr: Assign): R;
     visitBinaryExpr(expr: Binary): R;
+    visitCallExpr(expr: Call): R;
     visitGroupingExpr(expr: Grouping): R;
     visitLiteralExpr(expr: Literal): R;
     visitUnaryExpr(expr: Unary): R;
