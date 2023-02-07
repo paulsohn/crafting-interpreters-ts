@@ -1,4 +1,4 @@
-# Chap 9. Control Flow
+# Chap 10~11. Functions, Resolving and Binding
 
 ## EBNF rule
 
@@ -80,7 +80,8 @@ defineAst(outputDir, 'Stmt', ['Expr'], {
 
 ## Things we have done so far
 
-* TODO
+* function definition
+    * control flow with return statement
+    * closure
+* name resolution before execution
 
-up to 10.5.
-next: 10.6

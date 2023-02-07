@@ -5,6 +5,7 @@ import { Interpreter } from './Interpreter';
 
 // import { AstPrinter } from './AstPrinter';
 import { RuntimeError } from './Error';
+import { Resolver } from './Resolver';
 
 
 // static class to implement interpreter and save its state.
@@ -31,6 +32,13 @@ export class Lox{
         var stmts = parser.parse();
 
         if(Lox.hadError) return;
+
+        // resolve before actual interpretation
+        var resolver = new Resolver(this.interpreter);
+        resolver.resolveStmts(stmts);
+
+        if(Lox.hadError) return;
+
         this.interpreter.interpret(stmts);
     }
 
@@ -60,7 +68,11 @@ export class Lox{
     }
 
     static runtimeError(err: RuntimeError){
-        console.error(`[line ${ err.token.line }] RuntimeError: ${ err.message }`);
+        if(err.token === null){
+            console.error(`[line ?] RuntimeError: ${ err.message }`); // should be removed in the future though
+        } else{
+            console.error(`[line ${ err.token.line }] RuntimeError: ${ err.message }`);
+        }
 
         this.hadRuntimeError = true;
     }

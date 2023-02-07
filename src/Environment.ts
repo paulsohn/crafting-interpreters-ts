@@ -11,9 +11,20 @@ export class Environment {
         this.enclosing = enclosing;
     }
 
-    get(name: Token): any{ // why Token, not string??
-        if(this.values.has(name.lexeme)){
-            return this.values.get(name.lexeme);
+    ancestor(distance: number): Environment{
+        var env : Environment = this;
+        for(var i = 0; i < distance; i++){
+            env = env.enclosing!;
+        }
+        return env;
+    }
+
+    get(name: Token | string): any{
+        if(name instanceof Token){
+            name = name.lexeme;
+        }
+        if(this.values.has(name)){
+            return this.values.get(name);
         }
 
         // recursive calls into enclosing environment
@@ -28,6 +39,15 @@ export class Environment {
         // alternatively, we could throw runtime error.
     }
 
+    // get at fixed depth of environment
+    getAt(distance: number, name: Token | string): any{
+        if(name instanceof Token){
+            name = name.lexeme;
+        }
+
+        return this.ancestor(distance).values.get(name) ?? null;
+    }
+
     define(name: Token | string, value: any){
         if(name instanceof Token){
             name = name.lexeme;
@@ -37,9 +57,12 @@ export class Environment {
         // We won't prevent redefining. It just silently shadows the variable.
     }
 
-    assign(name: Token, value: any){
-        if(this.values.has(name.lexeme)){
-            this.values.set(name.lexeme, value);
+    assign(name: Token | string, value: any){
+        if(name instanceof Token){
+            name = name.lexeme;
+        }
+        if(this.values.has(name)){
+            this.values.set(name, value);
             return;
         }
 
@@ -48,8 +71,16 @@ export class Environment {
             return;
         }
 
-        throw new RuntimeError(name, `Undeclared variable '${ name.lexeme }'`);
+        throw new RuntimeError(null, `Undeclared variable '${ name }'`);
 
         // Lox doesn't do implicit variable declaration. that's why var statement exists.
+    }
+
+    // assign at fixed depth of environment
+    assignAt(distance: number, name: Token | string, value: any){
+        if(name instanceof Token){
+            name = name.lexeme;
+        }
+        return this.ancestor(distance).values.set(name, value) ?? null;
     }
 }

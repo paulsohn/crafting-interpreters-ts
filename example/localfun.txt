@@ -17,11 +17,14 @@ counter(); // "2".
 
 
 // now here is a questionable example of closure
-// `i` can be accessed in the local function, although 
-// this is TOTALLY FINE in some languages, but it's wierd
-// so we will do some semantic analysis before run.
+// without resolution, `i` can be accessed in the local function, although `i` is not even declared in the code yet.
+// this is TOTALLY FINE in some languages, but it's wierd (see example below)
+// so we will do some semantic analysis (resolution) before run.
+
+// to re-enable this feature, just resolve functions later than any other sentences.
 
 fun makeCounter2() {
+  // var i = -2; // this won't affect
   fun count() {
     i = i + 1;
     print i;
@@ -38,6 +41,8 @@ counter2(); // "6".
 
 
 // here's a more patheologic example
+// without resolution, it will print "global block"
+// because the associated closure has changed.
 
 var a = "global";
 {

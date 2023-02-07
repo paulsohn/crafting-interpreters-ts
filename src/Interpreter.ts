@@ -13,6 +13,7 @@ import { Control } from './Control';
 export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     globals: Environment = new Environment();
     private environment: Environment = this.globals; // current environment
+    private locals: Map<Expr.Expr, number> = new Map<Expr.Expr, number>();
 
     constructor(){
         this.globals.define('clock', new (class ClockFn extends Callable {
@@ -67,6 +68,11 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
 
     evaluate(expr: Expr.Expr): any{
         return expr.accept(this);
+    }
+
+    resolve(expr: Expr.Expr, depth: number){
+        // locals have local uses of a variable.
+        this.locals.set(expr, depth);
     }
 
     /* Stmt visitors */
@@ -148,7 +154,15 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
 
     visitAssignExpr(expr: Expr.Assign) {
         var value = this.evaluate(expr.value);
-        this.environment.assign(expr.name, value);
+        // this.environment.assign(expr.name, value);
+
+        var distance = this.locals.get(expr);
+        if(distance !== undefined){
+            this.environment.assignAt(distance, expr.name, value);
+        } else{
+            this.globals.assign(expr.name, value);
+        }
+        
         return value;
     }
 
@@ -254,8 +268,19 @@ export class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void>{
     }
 
     visitVariableExpr(expr: Expr.Variable) {
-        return this.environment.get(expr.name);
+        // return this.environment.get(expr.name);
+        return this.lookUpVariable(expr.name, expr);
     }
+
+    lookUpVariable(name: Token, expr: Expr.Expr){
+        var distance = this.locals.get(expr);
+        if(distance === undefined){
+            return this.globals.get(name);
+        } else{
+            return this.environment.getAt(distance, name);
+        }
+    }
+
 };
 
 function isTruthy(obj: any): boolean{ // ruby-like behavior of truth
