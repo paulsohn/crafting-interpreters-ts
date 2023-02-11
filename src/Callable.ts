@@ -7,7 +7,7 @@ import { TokenType } from "./Token";
 import * as Stmt from "./Stmt";
 
 // while not idiomatic in JS/TS,
-// we can't use trivial `instanceof` feature for instances
+// we can't use trivial `instanceof` feature for interfaces
 // so I stepped back into abstract class.
 
 export abstract class Callable {
@@ -29,7 +29,6 @@ export class Function extends Callable {
     call(interpreter: Interpreter, args: any[]) {
         var environment = new Environment(this.closure);
         // the environment must be created dynamically.
-        // 'top-level' functions only for now.
 
         // assume that the arity check was performed BEFORE this function call
         for(var i = 0; i < this.arity; ++i){
